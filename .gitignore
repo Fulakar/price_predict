@@ -3,7 +3,6 @@ artifacts
 models/ai-forever-ruBert-base
 models/DeepPavlov-rubert-base
 models/matvej-melikhov-ruBERT-finetuned-lenta
-models/data
 parser/csv
 .env
 
