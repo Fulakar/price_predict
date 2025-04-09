@@ -1,0 +1,15 @@
+mlruns
+artifacts
+models/ai-forever-ruBert-base
+models/DeepPavlov-rubert-base
+models/matvej-melikhov-ruBERT-finetuned-lenta
+models/data
+parser/csv
+.env
+
+model.pt
+optimizer_state_dict.pt
+
+**/*session
+
+descript.ipynb
