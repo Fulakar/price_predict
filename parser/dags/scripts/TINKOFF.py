@@ -110,9 +110,8 @@ history_price[['open', 'low', 'high', 'close']] = history_price[['open', 'low', 
 history_price['volume'] = history_price['volume'].astype(np.int32)
 history_price['date'] = pd.to_datetime(history_price['date'])
 history_price['ticker'] = history_price['ticker'].astype(str)
-
 # CSV
-history_price.to_csv(path_to_save, index=False)
+# history_price.to_csv(path_to_save, index=False)
 # POSTGRESQL
 query = f"INSERT INTO price_hour (open, low, high, close, volume, date, ticker) VALUES %s"
 with psycopg2.connect(dbname = DB_NAME, user = DB_USER, password = DB_PASS, host = DB_HOST, port = DB_PORT) as conn:

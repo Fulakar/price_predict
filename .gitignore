@@ -8,6 +8,7 @@ parser/csv
 
 model.pt
 optimizer_state_dict.pt
+**/__pycache__
 
 **/*session
 

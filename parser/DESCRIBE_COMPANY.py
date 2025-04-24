@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import time
 import os
 from tqdm import tqdm
-from TINKOFF_FUNC import rename_name, rename_sector
+from dags.scripts.TINKOFF_FUNC import rename_name, rename_sector
 load_dotenv()
 
 DB_HOST = os.environ.get("DB_HOST")

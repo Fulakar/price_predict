@@ -2,11 +2,12 @@ from telethon import TelegramClient
 import telethon
 import pandas as pd
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 import pytz
 from dotenv import load_dotenv
 import os
 import sys
+from pathlib import Path
 import psycopg2
 import psycopg2.extras
 from tqdm import tqdm
@@ -46,7 +47,7 @@ async def search_messages(client:TelegramClient, channel_with_news) -> pd.DataFr
     for dialog in dialogs:
         if isinstance(dialog.entity, telethon.types.Channel) and dialog.entity.title in channel_with_news:
             async for message in client.iter_messages(dialog):
-                if message.message is not None and message.message.strip() and message.date > from_date:
+                if message.date > from_date and message.message is not None and message.message.strip():
                     async with lock:
                         data.append({
                             "channel":dialog.entity.title,
@@ -54,13 +55,18 @@ async def search_messages(client:TelegramClient, channel_with_news) -> pd.DataFr
                             "text":message.message
                         })
                         news_counter.update(1)
+                if message.date < from_date:
+                    break
     news_counter.close()
     print(f"Закончил парсить. Всего добавлено новостей: {news_counter.n}")
     dataset = pd.DataFrame(data, columns=['channel', 'date', 'text'])
-    print(dataset.loc[:5])
+    print(dataset.head(5))
     return dataset
 
-with TelegramClient('MTS_acc', API_ID, API_HASH, system_version="4.16.30-vxCUSTOM") as client:
+script_dir = Path(__file__).parent
+session_path = script_dir / 'MTS_acc.session'
+
+with TelegramClient(str(session_path), API_ID, API_HASH, system_version="4.16.30-vxCUSTOM") as client:
     client.loop.run_until_complete(client.send_message('@Fima_Herosimovich', f'Поиск начат'))
     dataset = client.loop.run_until_complete(search_messages(client, channel_with_news))
     client.loop.run_until_complete(client.send_message('@Fima_Herosimovich', f'Поиск закончен'))
@@ -68,7 +74,7 @@ with TelegramClient('MTS_acc', API_ID, API_HASH, system_version="4.16.30-vxCUSTO
 dataset.drop_duplicates(inplace=True)
 dataset.dropna(inplace=True)
 # CSV
-dataset.to_csv(path_to_save, index=False)
+# dataset.to_csv(path_to_save, index=False)
 # POSTGRESQL
 with psycopg2.connect(dbname = DB_NAME, user = DB_USER, password = DB_PASS, host = DB_HOST, port = DB_PORT) as conn:
     query = "INSERT INTO news (channel, date, text) VALUES %s"

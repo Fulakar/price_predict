@@ -8,6 +8,7 @@ from typing import List
 from dotenv import load_dotenv
 import os
 import sys
+from pathlib import Path
 import psycopg2
 import psycopg2.extras
 sys.path.append(sys.path[0][:-7])
@@ -50,6 +51,8 @@ async def search_messages(client:TelegramClient, names:List[str], tickers:List[s
                             Date = message.date
                             Text = message.message
                             dataset.loc[len(dataset.index)] = [Channel, Ticker, Date, Text]
+                    if message.date < from_date:
+                        break
                 print(f'Закончил парсить {dialog.entity.title}')
         print(f'ЗАКОНЧИЛ ПАРСИТЬ ПО {names[index]}')
 
@@ -64,7 +67,10 @@ with psycopg2.connect(dbname = DB_NAME, user = DB_USER, password = DB_PASS, host
 ticker = [r[0] for r in responce]
 name = [r[1] for r in responce]
 
-with TelegramClient('MTS_acc', API_ID, API_HASH, system_version="4.16.30-vxCUSTOM") as client:
+script_dir = Path(__file__).parent
+session_path = script_dir / 'MTS_acc.session'
+
+with TelegramClient(str(session_path), API_ID, API_HASH, system_version="4.16.30-vxCUSTOM") as client:
     client.loop.run_until_complete(client.send_message('@Fima_Herosimovich', f'Поиск начат по : {" ".join(name)}'))
     dataset = client.loop.run_until_complete(search_messages(client, name, ticker))
     client.loop.run_until_complete(client.send_message('@Fima_Herosimovich', f'Поиск закончен'))
@@ -72,7 +78,7 @@ with TelegramClient('MTS_acc', API_ID, API_HASH, system_version="4.16.30-vxCUSTO
 dataset.drop_duplicates(inplace=True)
 dataset.dropna(inplace=True)
 # CSV
-dataset.to_csv(path_to_save, index=False)
+# dataset.to_csv(path_to_save, index=False)
 # POSTGRESQL
 with psycopg2.connect(dbname = DB_NAME, user = DB_USER, password = DB_PASS, host = DB_HOST, port = DB_PORT) as conn:
     query = "INSERT INTO news_with_ticker (channel, ticker, date, text) VALUES %s"
